@@ -4,6 +4,8 @@ using UnityEngine;
 
 public class PlayerController : MonoBehaviour
 {
+    private Animator anim;
+    private Rigidbody myRigid;
 
     // 스피드 조정 변수
     [SerializeField]
@@ -14,28 +16,24 @@ public class PlayerController : MonoBehaviour
     private float applySpeed;
 
     [SerializeField]
+    private float rotateSpeed;
+
+    [SerializeField]
     private float jumpForce;
 
+    [SerializeField]
+    private float fallMultiplier;
 
     // 상태 변수
     private bool isRun = false;
     private bool isGround = true;
 
-
-    // 앉았을 때 얼마나 앉을지 결정하는 변수.
-    [SerializeField]
-
-    private float originPosY;
-
-
     // 땅 착지 여부
     private BoxCollider boxCollider;
 
-    [SerializeField]
-    private Rigidbody myRigid;
-
     void Start()
     {
+        anim = GetComponent<Animator>();
         boxCollider = GetComponent<BoxCollider>();
         myRigid = GetComponent<Rigidbody>();
         applySpeed = walkSpeed;
@@ -49,8 +47,18 @@ public class PlayerController : MonoBehaviour
         TryJump();
         TryRun();
         Move();
-        //CharacterRotation();
 
+    }
+
+    void FixedUpdate()
+    {
+        if (myRigid.linearVelocity.y < 0)
+        {
+            myRigid.AddForce(
+                Physics.gravity * fallMultiplier,
+                ForceMode.Acceleration
+            );
+        }
     }
 
     // 지면 체크.
@@ -73,6 +81,7 @@ public class PlayerController : MonoBehaviour
     // 점프
     private void Jump()
     {
+        anim.SetTrigger("Jump");
         myRigid.linearVelocity = transform.up * jumpForce;
     }
 
@@ -114,13 +123,19 @@ public class PlayerController : MonoBehaviour
 
         Vector3 move = new Vector3(x, 0f, z).normalized * applySpeed;
         myRigid.MovePosition(myRigid.position + move * Time.deltaTime);
+        if (move.sqrMagnitude > 0.01f)
+        {
+            anim.SetBool("Walk", true);
+            anim.SetBool("Run", isRun);
+            Quaternion targetRot = Quaternion.LookRotation(move);
+            myRigid.MoveRotation(
+                Quaternion.Slerp(myRigid.rotation, targetRot, rotateSpeed * Time.deltaTime)
+            );
+        }
+        else
+        {
+            anim.SetBool("Walk",false);
+            anim.SetBool("Run", false);
+        }
     }
-
-    // 좌우 캐릭터 회전
-    /*private void CharacterRotation()
-    {
-        float Rotation = Input.GetAxisRaw("Horizontal");
-        Vector3 _characterRotationY = new Vector3(0f, Rotation, 0f);
-        myRigid.MoveRotation(myRigid.rotation * Quaternion.Euler(_characterRotationY));
-    }*/
 }
