@@ -19,7 +19,7 @@ public class PlayerController : MonoBehaviour
     private float rotateSpeed;
 
     [SerializeField]
-    private float jumpForce;
+    private int jumpForce;
 
     [SerializeField]
     private float fallMultiplier;
@@ -137,5 +137,12 @@ public class PlayerController : MonoBehaviour
             anim.SetBool("Walk",false);
             anim.SetBool("Run", false);
         }
+    }
+
+    public void SuperJump(int value)
+    {
+        jumpForce = jumpForce + value;
+        Jump();
+        jumpForce = jumpForce - value;
     }
 }
